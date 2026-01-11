@@ -131,17 +131,8 @@ const invalidateSession = asyncHandler(async (req, res) => {
  */
 const getUserProfile = asyncHandler(async (req, res) => {
   const { username } = req.params;
-  const userId = req.user.id;
-
-  // Get session if available
-  const sessionData = await leetcodeService.getUserSession(userId);
-  if(!sessionData){
-    return res.status(200).json({
-      success: false,
-      message: "No LeetCode session found. Please store your session first.",
-    });
-  }
-  const profile = await leetcodeService.fetchUserProfile(username, sessionData);
+  
+  const profile = await leetcodeService.fetchUserProfile(username);
 
   res.status(200).json({
     success: true,
@@ -155,28 +146,19 @@ const getUserProfile = asyncHandler(async (req, res) => {
  */
 const testConnection = asyncHandler(async (req, res) => {
   const { username } = req.params;
-  const userId = req.user.id;
 
-  // Get session if available
-  const sessionData = await leetcodeService.getUserSession(userId);
-
-  // Fetch recent submissions
   const today = new Date();
   const yesterday = new Date(today);
   yesterday.setDate(yesterday.getDate() - 1);
 
-  const submissions = await leetcodeService.fetchSubmissionsForDate(
-    username,
-    yesterday,
-    sessionData
-  );
+  const submissions = await leetcodeService.fetchSubmissionsForDate(username);
 
   res.status(200).json({
     success: true,
     message: "Connection test successful",
     data: {
       username,
-      hasSession: !!sessionData,
+      hasSession: true,
       submissionsFound: submissions.length,
       submissions: submissions// Return first 5 for testing
     },

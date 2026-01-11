@@ -19,34 +19,10 @@ const {
  * @param {string} sessionData - Optional encrypted session data
  * @returns {Array} Array of submissions
  */
-const fetchUserSubmissions = async (
-  leetcodeUsername,
-  sessionData = null
-) => {
+const fetchUserSubmissions = async (leetcodeUsername) => {
+
   try {
-    const headers = {
-      "Content-Type": "application/json",
-      "User-Agent": "Mozilla/5.0",
-    };
-
-    // If session data is provided, decrypt and add to headers
-    if (sessionData) {
-      try {
-        const decryptedSession = decrypt(sessionData);
-        const sessionObj = JSON.parse(decryptedSession);
-
-        if (sessionObj.cookie) {
-          headers["Cookie"] = sessionObj.cookie;
-        }
-        if (sessionObj.csrfToken) {
-          headers["X-CSRFToken"] = sessionObj.csrfToken;
-        }
-      } catch (error) {
-        logger.warn("Failed to decrypt session data:", error.message);
-      }
-    }
-
-    // Fetch recent submissions (up to 100)
+    // Fetch recent submissions (up to 10)
     const response = await axios.post(
       config.leetcodeGraphqlUrl,
       {
@@ -56,7 +32,6 @@ const fetchUserSubmissions = async (
           limit: 10,
         },
       },
-      { headers, timeout: 10000 }
     );
 
     if (!response.data || !response.data.data) {
@@ -177,15 +152,10 @@ const storeUserSession = async (userId, sessionData, expiresAt = null) => {
  * @param {string} sessionData - Optional session data
  * @returns {Array} Submissions for the date
  */
-const fetchSubmissionsForDate = async (
-  leetcodeUsername,
-  date,
-  sessionData = null
-) => {
+const fetchSubmissionsForDate = async (leetcodeUsername) => {
 
   return await fetchUserSubmissions(
     leetcodeUsername,
-    sessionData
   );
 };
 
@@ -198,40 +168,12 @@ const fetchSubmissionsForDate = async (
  * @param {string|null} sessionData - Encrypted session data
  * @returns {Promise<Object>} GraphQL response data
  */
-const fetchLeetCodeData = async (query, variables, sessionData = null) => {
+const fetchLeetCodeData = async (query, variables) => {
   try {
-    // Prepare headers
-    const headers = {
-      "Content-Type": "application/json",
-      "User-Agent":
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-      Referer: "https://leetcode.com/",
-      Origin: "https://leetcode.com",
-    };
-
-    // Add session cookies if provided (for authenticated requests)
-    if (sessionData) {
-      try {
-        const decryptedSession = decrypt(sessionData);
-        const sessionObj = JSON.parse(decryptedSession);
-
-        if (sessionObj.cookie) {
-          headers["Cookie"] = sessionObj.cookie;
-        }
-        if (sessionObj.csrfToken) {
-          headers["X-CSRFToken"] = sessionObj.csrfToken;
-          headers["X-Requested-With"] = "XMLHttpRequest";
-        }
-      } catch (error) {
-        logger.warn("Failed to decrypt session data:", error.message);
-      }
-    }
-
     // Make GraphQL request
     const response = await axios.post(
       config.leetcodeGraphqlUrl || "https://leetcode.com/graphql/",
-      { query, variables },
-      { headers, timeout: 15000 }
+      { query, variables }
     );
 
     // Check for GraphQL errors
@@ -443,13 +385,12 @@ const invalidateUserSession = async (userId) => {
  * @param {string|null} sessionData - Optional session data
  * @returns {Promise<Object>} User statistics
  */
-const fetchUserProfile = async (username, sessionData = null) => {
+const fetchUserProfile = async (username) => {
   try {
     const currentYear = new Date().getFullYear();
     const data = await fetchLeetCodeData(
       USER_CALENDAR_QUERY,
-      { username, year: currentYear },
-      sessionData
+      { username, year: currentYear }
     );
 
     if (!data || !data.matchedUser) {
