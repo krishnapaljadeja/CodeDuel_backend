@@ -4,89 +4,12 @@ const { prisma } = require("../config/prisma");
 const { encrypt, decrypt } = require("../utils/encryption");
 const logger = require("../utils/logger");
 
-// LeetCode GraphQL API endpoint
-const LEETCODE_GRAPHQL_URL = "https://leetcode.com/graphql/";
-
-/**
- * GraphQL Query: Fetch recent AC submissions for a user
- * Inspired by: https://github.com/akarsh1995/leetcode-graphql-queries
- *
- * Returns: Recent accepted submissions with basic info
- * Note: Does NOT include difficulty in response
- */
-const RECENT_SUBMISSIONS_QUERY = `
-  query recentAcSubmissions($username: String!, $limit: Int!) {
-    recentAcSubmissionList(username: $username, limit: $limit) {
-      id
-      title
-      titleSlug
-      timestamp
-      statusDisplay
-      lang
-    }
-  }
-`;
-
-/**
- * GraphQL Query: Fetch problem details including difficulty
- * Inspired by: https://github.com/akarsh1995/leetcode-graphql-queries
- *
- * Returns: Complete problem metadata including difficulty
- */
-const PROBLEM_DETAILS_QUERY = `
-  query questionData($titleSlug: String!) {
-    question(titleSlug: $titleSlug) {
-      questionId
-      questionFrontendId
-      title
-      titleSlug
-      difficulty
-      likes
-      dislikes
-      isPaidOnly
-      acRate
-      topicTags {
-        name
-        slug
-      }
-    }
-  }
-`;
-
-/**
- * GraphQL Query: Fetch user's submission calendar
- * Useful for getting submission counts by date
- */
-const USER_CALENDAR_QUERY = `
-  query userProfileCalendar($username: String!, $year: Int!) {
-    matchedUser(username: $username) {
-      userCalendar(year: $year) {
-        activeYears
-        streak
-        totalActiveDays
-        submissionCalendar
-      }
-    }
-  }
-`;
-
-/**
- * GraphQL Query: Fetch detailed submissions with status
- * This query can be used for more granular submission data
- */
-const USER_SUBMISSIONS_QUERY = `
-  query userSubmissions($username: String!, $offset: Int!, $limit: Int!) {
-    recentSubmissionList(username: $username, offset: $offset, limit: $limit) {
-      title
-      titleSlug
-      timestamp
-      statusDisplay
-      lang
-      runtime
-      memory
-    }
-  }
-`;
+const {
+  RECENT_SUBMISSIONS_QUERY,
+  PROBLEM_DETAILS_QUERY,
+  USER_CALENDAR_QUERY,
+  USER_SUBMISSIONS_QUERY,
+} = require("../utils/leetcode.queries");
 
 /**
  * Fetch LeetCode submissions for a user
